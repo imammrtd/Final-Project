@@ -7,9 +7,7 @@ st.set_page_config(page_title="Olist AI Interface", page_icon="🤖")
 st.title("🤖 Olist AI Assistant Interface")
 st.markdown("---")
 
-# PENTING: Ganti URL di bawah ini dengan URL dari tab 'Settings' di Railway Anda
-# Contoh: https://final-project-production.up.railway.app
-BASE_URL = "https://URL_RAILWAY_ANDA.up.railway.app"
+BASE_URL = "https://final-project-im.up.railway.app"
 API_URL = f"{BASE_URL}/ask"
 
 user_query = st.text_input("Tanyakan sesuatu tentang data transaksi:", placeholder="Contoh: Berapa total transaksi?")
