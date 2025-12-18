@@ -7,7 +7,7 @@ st.set_page_config(page_title="Olist AI Interface", page_icon="🤖")
 st.title("🤖 Olist AI Assistant Interface")
 st.markdown("---")
 
-BASE_URL = "https://final-project-im.up.railway.app"
+BASE_URL = "https://finproim4.up.railway.app"
 API_URL = f"{BASE_URL}/ask"
 
 user_query = st.text_input("Tanyakan sesuatu tentang data transaksi:", placeholder="Contoh: Berapa total transaksi?")
