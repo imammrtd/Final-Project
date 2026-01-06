@@ -1,84 +1,27 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from agents.orchestrator import orchestrator
+import uvicorn
 import os
-import sqlite3
-import pandas as pd
-from fastapi import FastAPI, HTTPException, Query
-from dotenv import load_dotenv
-import google.generativeai as genai
 
-# Load environment variables
-load_dotenv()
+app = FastAPI(title="Olist Multi-Agent API")
 
-app = FastAPI(title="Olist AI Assistant API")
-
-# --- Logika SQL Agent ---
-class SQLAgent:
-    def __init__(self, db_path):
-        self.db_path = db_path
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY tidak ditemukan di environment variables")
-        
-        genai.configure(api_key=api_key)
-        # Menggunakan model stabil yang tersedia di akun Anda
-        self.model = genai.GenerativeModel('gemini-2.0-flash')
-
-    def _get_schema(self):
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT name, sql FROM sqlite_master WHERE type='table';")
-        schema = "\n".join([f"Table: {row[0]}\nSQL: {row[1]}" for row in cursor.fetchall()])
-        conn.close()
-        return schema
-
-    def handle_query(self, user_query):
-        schema = self._get_schema()
-        prompt = f"""
-        Anda adalah SQL expert. Berdasarkan schema berikut:
-        {schema}
-        
-        Jawab pertanyaan user: "{user_query}"
-        Berikan jawaban dalam format JSON:
-        {{
-            "sql": "QUERY_SQL_DISINI",
-            "explanation": "Penjelasan singkat dalam Bahasa Indonesia"
-        }}
-        Hanya berikan JSON, tanpa markdown.
-        """
-        
-        try:
-            response = self.model.generate_content(prompt)
-            # Membersihkan response jika ada karakter markdown
-            clean_json = response.text.replace('```json', '').replace('```', '').strip()
-            import json
-            data = json.loads(clean_json)
-            
-            # Eksekusi SQL
-            conn = sqlite3.connect(self.db_path)
-            df = pd.read_sql_query(data['sql'], conn)
-            conn.close()
-            
-            return {
-                "input": user_query,
-                "sql_query": data['sql'],
-                "explanation": data['explanation'],
-                "data": df.to_dict(orient='records')
-            }
-        except Exception as e:
-            raise Exception(f"Error processing query: {str(e)}")
-
-# Inisialisasi Agent
-agent = SQLAgent("olist.db")
-
-# --- Routes FastAPI ---
+class QueryRequest(BaseModel):
+    prompt: str
 
 @app.get("/")
-def read_root():
-    return {"status": "online", "message": "Welcome to Olist AI REST API"}
+def health_check():
+    return {"status": "online", "message": "Olist Multi-Agent API is running"}
 
-@app.get("/ask")
-def ask_ai(query: str = Query(..., example="Berapa total transaksi?")):
+@app.post("/ask")
+async def ask_agent(request: QueryRequest):
     try:
-        result = agent.handle_query(query)
-        return result
+        # Menjalankan logika orchestrator yang memanggil SQL & RAG
+        result = orchestrator(request.prompt)
+        return {"answer": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
