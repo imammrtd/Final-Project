@@ -1,7 +1,10 @@
-fastapi
-uvicorn
-google-generativeai
+langchain
+langchain-community
+langchain-core
+langchain-openai
+langchain-qdrant
+qdrant-client
 python-dotenv
 pandas
-streamlit
-requests
+pydantic
+sqlalchemy

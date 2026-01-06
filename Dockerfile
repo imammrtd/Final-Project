@@ -1,16 +1,10 @@
-FROM python:3.10-slim
-
+FROM python:3.11-slim
 WORKDIR /app
-
-# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy semua file ke dalam container
-COPY . .
-
-# Railway dan GCP biasanya menggunakan port 8080 secara default
-EXPOSE 8080
-
-# Jalankan FastAPI menggunakan Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+COPY agents/ ./agents/
+COPY olist.db .
+COPY streamlit_app.py .
+ENV PYTHONPATH=/app/agents
+EXPOSE 8501
+CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
