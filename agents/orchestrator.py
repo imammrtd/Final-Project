@@ -3,8 +3,10 @@ import sys
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
-# Memastikan root project masuk ke sys.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Solusi ModuleNotFoundError: Tambahkan path folder utama
+root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if root_path not in sys.path:
+    sys.path.append(root_path)
 
 try:
     from agents.sql_agent import get_sql_chain
@@ -18,19 +20,19 @@ load_dotenv()
 def orchestrator(user_input: str):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        return "Error: OPENAI_API_KEY tidak ditemukan di Variables Railway."
+        return "Error: OPENAI_API_KEY tidak ditemukan di Secrets/Variables."
 
-    # Inisialisasi Agent secara lokal di dalam fungsi agar fresh
+    # Memuat chain secara fresh
     sql_agent = get_sql_chain()
     rag_chain = get_rag_chain()
 
     print(f"\n[ORCHESTRATOR] Menganalisis: {user_input}")
     
-    # 1. RAG
-    context_rag = rag_chain.invoke(f"Sebutkan product_id kategori: {user_input}")
+    # 1. RAG untuk mencari konteks ID Produk
+    context_rag = rag_chain.invoke(f"Cari product_id terkait: {user_input}")
     
-    # 2. SQL
-    enriched_query = f"User: {user_input}. Konteks: {context_rag}. Hitung rata-rata harga."
+    # 2. SQL Agent untuk eksekusi query data
+    enriched_query = f"Pertanyaan: {user_input}. Konteks: {context_rag}. Hitung rata-rata harga."
     res = sql_agent.invoke({"input": enriched_query})
     
     return res.get('output', 'Maaf, gagal mendapatkan data.')

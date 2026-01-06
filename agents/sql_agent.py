@@ -8,21 +8,20 @@ from langchain_community.agent_toolkits.sql.base import create_sql_agent
 load_dotenv()
 
 def get_sql_chain():
-    # Ambil API Key dari environment
+    # Ambil API Key dari environment (Streamlit Secrets / Railway)
     api_key = os.getenv("OPENAI_API_KEY")
     
-    # Navigasi Path Database
+    # Path Database Dinamis
     current_dir = os.path.dirname(os.path.abspath(__file__))
     base_dir = os.path.dirname(current_dir)
     db_path = os.path.join(base_dir, "olist.db")
     
+    # Jika di Streamlit Cloud, path mungkin berbeda, kita cek:
     if not os.path.exists(db_path):
-        # Fallback untuk Railway (biasanya ada di root /app/olist.db)
-        db_path = "/app/olist.db" if os.path.exists("/app/olist.db") else "olist.db"
+        db_path = "olist.db" # Coba cari di root
 
     db = SQLDatabase.from_uri(f"sqlite:///{db_path}")
     
-    # Inisialisasi LLM dengan API Key eksplisit
     llm = ChatOpenAI(
         model="gpt-4o-mini", 
         temperature=0, 
@@ -31,7 +30,7 @@ def get_sql_chain():
     
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
     
-    agent_executor = create_sql_agent(
+    return create_sql_agent(
         llm=llm,
         toolkit=toolkit,
         verbose=True,
@@ -39,5 +38,3 @@ def get_sql_chain():
         handle_parsing_errors=True,
         max_iterations=10
     )
-    
-    return agent_executor
