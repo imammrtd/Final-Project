@@ -23,5 +23,6 @@ async def ask_agent(request: QueryRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
+    # HF akan memberikan port 7860 secara otomatis
+    port = int(os.environ.get("PORT", 7860)) 
     uvicorn.run(app, host="0.0.0.0", port=port)

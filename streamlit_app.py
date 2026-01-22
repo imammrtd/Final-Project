@@ -4,8 +4,8 @@ import requests
 st.set_page_config(page_title="Olist AI Assistant", page_icon="🤖")
 st.title("🤖 Olist Multi-Agent System")
 
-# Masukkan URL Railway API Anda nanti di sini
-API_URL = st.sidebar.text_input("API Endpoint", "http://0.0.0.0:8080/ask")
+# URL API Backend
+API_URL = st.sidebar.text_input("API Endpoint", "https://imammrtd-fp.hf.space/ask")
 
 user_query = st.text_input("Tanyakan sesuatu:", placeholder="Contoh: Berapa rata-rata harga produk kesehatan?")
 
